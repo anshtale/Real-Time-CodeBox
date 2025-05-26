@@ -1,10 +1,12 @@
 import express from "express";
 import { createClient } from "redis";
 import { WebSocketServer } from "ws";
+import cors from 'cors'
 
 const app = express();
 
 app.use(express.json());
+app.use(cors());
 
 const redisClient = createClient();
 const pubSubClient = createClient();
@@ -25,23 +27,26 @@ wss.on('connection',(ws,req)=>{
     })
 })
 
-app.post('submit',async (req,res)=>{
-    const {problemId,code,language,userId} = req.body;
+app.post('/submit',async (req,res)=>{
+    const { code,language,userId } = req.body;
 
     const submissionId = `submission-${Date.now()}-${userId}}`
+    console.log(`Received submission from user ${userId}`);
 
     try{
-        await redisClient.lPush("problems",JSON.stringify({problemId,code,language,userId}));
+        await redisClient.lPush("problems",JSON.stringify({code,language,userId}));
 
-        pubSubClient.on("message",(channel,message)=>{
+        pubSubClient.subscribe("message",(channel,message)=>{
+            console.log(`Received message: ${message}`);
+        })
+
+        pubSubClient.on('message',(channel,message)=>{
             if(channel == submissionId){
                 const ws = userConnections[userId];
-
+                
                 if(ws){
                     ws.send(message);
                 }
-
-                pubSubClient.unsubscribe(submissionId);
             }
         })
 
