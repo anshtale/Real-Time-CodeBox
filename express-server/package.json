@@ -4,6 +4,8 @@
   "main": "index.js",
   "description": "",
   "dependencies": {
+    "@types/cors": "^2.8.17",
+    "cors": "^2.8.5",
     "@types/express": "^5.0.0",
     "@types/redis": "^4.0.11",
     "@types/ws": "^8.5.12",
