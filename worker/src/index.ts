@@ -7,7 +7,7 @@ import path from 'path'
 const client = createClient();
 const pubClient = createClient();
 
-async function processSubmission(submission){
+async function processSubmission(submission:any){
     const { code, language, userId, submissionId } = JSON.parse(submission);
 
     console.log(`Processing submission ${submissionId}`); 
@@ -33,15 +33,13 @@ async function processSubmission(submission){
         await pubClient.publish(submissionId,result);
         fs.rmSync(codeDir,{recursive:true,force:true});
     });
-
-    
-    
 }
 
 async function main(){
     try{
         await client.connect();
         await pubClient.connect();
+
         console.log("Redis Client Connected");
 
         while(true){

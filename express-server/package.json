@@ -1,8 +1,7 @@
 {
   "name": "express-server",
   "version": "1.0.0",
-  "main": "index.js",
-  "description": "",
+  "main": "index.ts",
   "dependencies": {
     "@types/cors": "^2.8.17",
     "cors": "^2.8.5",
@@ -16,7 +15,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "devDependencies": {},
+  "description": ""
 }

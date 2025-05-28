@@ -76,6 +76,7 @@ async function main() {
       console.log("Failed to connect to Redis", error);
     }
 }
+
   
 main();
 
