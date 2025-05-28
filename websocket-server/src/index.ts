@@ -74,8 +74,10 @@ async function process() {
 
         pubSubClient.subscribe(roomId, (message) => {
             rooms[roomId].forEach((user: any) => {
-                user.ws.send(JSON.stringify({ type: "output", message }));
-                console.log("Output sent to user id", user.id);
+                if (user.userId === userId) {
+                    user.ws.send(JSON.stringify({ type: "output", message }));
+                    console.log("Output sent to user id", user.id);
+                }
             });
         });
 
@@ -229,8 +231,8 @@ async function process() {
         console.log(`Server listening on port ${addr.port}`);
     });
 
-    server.listen(8080, '0.0.0.0', () => {
-        console.log("web socket server started on 8080");
+    server.listen(5000, '0.0.0.0', () => {
+        console.log("web socket server started on 5000");
     });
 }
 
