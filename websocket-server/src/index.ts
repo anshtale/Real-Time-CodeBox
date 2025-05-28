@@ -2,7 +2,7 @@ import http from "http"
 import { WebSocketServer } from "ws"
 import { createClient } from "redis"
 import { error } from "console";
-import requestRouter from "./routers";
+import requestRouter from "./routers/router";
 const { str10_36 } = require('hyperdyperid/lib/str10_36');
 
 const server = http.createServer();
@@ -17,6 +17,7 @@ function generateRoomId() {
 }
 
 async function process() {
+    console.log("inside");
     pubSubClient.on("error", (err) => {
         console.log("Redis PubSub Client Error", err);
     })
@@ -222,15 +223,17 @@ async function process() {
             console.log("all room", rooms);
         })
 
-        wss.on("listening", () => {
-            const addr: any = server.address();
-            console.log(`Server listening on port ${addr.port}`);
-        });
-
-        server.listen(5000, '0.0.0.0', () => {
-            console.log("web socket server started on 5000");
-        });
     })
+
+
+    wss.on("listening", () => {
+        const addr: any = server.address();
+        console.log(`Server listening on port ${addr.port}`);
+    });
+
+    server.listen(8080, '0.0.0.0', () => {
+        console.log("web socket server started on 8080");
+    });
 }
 
 async function main() {
