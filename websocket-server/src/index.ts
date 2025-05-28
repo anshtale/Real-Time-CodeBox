@@ -2,6 +2,7 @@ import http from "http"
 import { WebSocketServer } from "ws"
 import { createClient } from "redis"
 import { error } from "console";
+import requestRouter from "./routers";
 const { str10_36 } = require('hyperdyperid/lib/str10_36');
 
 const server = http.createServer();
@@ -84,115 +85,122 @@ async function process() {
 
             console.log("Message received", data.type);
 
-            if (data.type === "requestToGetUsers") {
-                const users = rooms[roomId].map((user: any) => ({
-                    id: user.userId,
-                    name: user.name,
-                }));
+            // if (data.type === "requestToGetUsers") {
+            //     const users = rooms[roomId].map((user: any) => ({
+            //         id: user.userId,
+            //         name: user.name,
+            //     }));
 
-                console.log("Request recived");
+            //     console.log("Request recived");
 
-                rooms[roomId].forEach((user: any) => {
-                    user.ws.send(JSON.stringify({ type: "users", users: users }));
-                });
-            }
+            //     rooms[roomId].forEach((user: any) => {
+            //         user.ws.send(JSON.stringify({ type: "users", users: users }));
+            //     });
+            // }
 
-            if (data.type === 'requestForAllData') {
-                const otherUser = rooms[roomId].find(
-                    (user: any) => user.userId !== userId
-                );
+            // if (data.type === 'requestForAllData') {
+            //     const otherUser = rooms[roomId].find(
+            //         (user: any) => user.userId !== userId
+            //     );
 
-                if (otherUser) {
-                    console.log("sending request to", otherUser.name);
-                    otherUser.ws.send(
-                        JSON.stringify({
-                            type: "requestForAllData",
-                            userId: userId,
-                        })
-                    );
-                }
-            }
+            //     if (otherUser) {
+            //         console.log("sending request to", otherUser.name);
+            //         otherUser.ws.send(
+            //             JSON.stringify({
+            //                 type: "requestForAllData",
+            //                 userId: userId,
+            //             })
+            //         );
+            //     }
+            // }
 
-            if (data.type === "code") {
-                rooms[roomId].forEach((user: any) => {
-                    if (user.userId != userId) {
-                        user.ws.send(JSON.stringify({ type: "code", code: data.code }));
-                    }
-                });
-            }
+            // if (data.type === "code") {
+            //     rooms[roomId].forEach((user: any) => {
+            //         if (user.userId != userId) {
+            //             user.ws.send(JSON.stringify({ type: "code", code: data.code }));
+            //         }
+            //     });
+            // }
 
-            if (data.type === "input") {
-                rooms[roomId].forEach((user: any) => {
-                    if (user.userId != userId) {
-                        user.ws.send(JSON.stringify({ type: "input", input: data.input }));
-                    }
-                });
-            }
+            // if (data.type === "input") {
+            //     rooms[roomId].forEach((user: any) => {
+            //         if (user.userId != userId) {
+            //             user.ws.send(JSON.stringify({ type: "input", input: data.input }));
+            //         }
+            //     });
+            // }
 
-            if (data.type === "language") {
-                rooms[roomId].forEach((user: any) => {
-                    if (user.userId != userId) {
-                        user.ws.send(
-                            JSON.stringify({ type: "language", language: data.language })
-                        );
-                    }
-                });
-            }
+            // if (data.type === "language") {
+            //     rooms[roomId].forEach((user: any) => {
+            //         if (user.userId != userId) {
+            //             user.ws.send(
+            //                 JSON.stringify({ type: "language", language: data.language })
+            //             );
+            //         }
+            //     });
+            // }
 
-            if (data.type === "submitBtnStatus") {
-                rooms[roomId].forEach((user: any) => {
-                    if (user.userId != userId) {
-                        user.ws.send(
-                            JSON.stringify({
-                                type: "submitBtnStatus",
-                                value: data.value,
-                                isLoading: data.isLoading,
-                            })
-                        );
-                    }
-                });
-            }
+            // if (data.type === "submitBtnStatus") {
+            //     rooms[roomId].forEach((user: any) => {
+            //         if (user.userId != userId) {
+            //             user.ws.send(
+            //                 JSON.stringify({
+            //                     type: "submitBtnStatus",
+            //                     value: data.value,
+            //                     isLoading: data.isLoading,
+            //                 })
+            //             );
+            //         }
+            //     });
+            // }
 
-            // handle user added
-            if (data.type === "users") {
-                rooms[roomId].forEach((user: any) => {
-                    if (user.userId != userId) {
-                        user.ws.send(JSON.stringify({ type: "users", users: data.users }));
-                    }
-                });
-            }
+            // // handle user added
+            // if (data.type === "users") {
+            //     rooms[roomId].forEach((user: any) => {
+            //         if (user.userId != userId) {
+            //             user.ws.send(JSON.stringify({ type: "users", users: data.users }));
+            //         }
+            //     });
+            // }
 
-            if (data.type === "allData") {
-                rooms[roomId].forEach((user: any) => {
-                    if (user.userId === data.userId) {
-                        console.log("sending all data to", user.name, "and data is", data);
+            // if (data.type === "allData") {
+            //     rooms[roomId].forEach((user: any) => {
+            //         if (user.userId === data.userId) {
+            //             console.log("sending all data to", user.name, "and data is", data);
 
-                        user.ws.send(
-                            JSON.stringify({
-                                type: "allData",
-                                code: data.code,
-                                input: data.input,
-                                language: data.language,
-                                currentButtonState: data.currentButtonState,
-                                isLoading: data.isLoading,
-                            })
-                        );
-                    }
-                });
-            }
+            //             user.ws.send(
+            //                 JSON.stringify({
+            //                     type: "allData",
+            //                     code: data.code,
+            //                     input: data.input,
+            //                     language: data.language,
+            //                     currentButtonState: data.currentButtonState,
+            //                     isLoading: data.isLoading,
+            //                 })
+            //             );
+            //         }
+            //     });
+            // }
 
-            if (data.type === "cursorPosition") {
-                rooms[roomId].forEach((user: any) => {
-                    if (user.userId != userId) {
-                        user.ws.send(
-                            JSON.stringify({
-                                type: "cursorPosition",
-                                cursorPosition: data.cursorPosition,
-                                userId: userId,
-                            })
-                        );
-                    }
-                });
+            // if (data.type === "cursorPosition") {
+            //     rooms[roomId].forEach((user: any) => {
+            //         if (user.userId != userId) {
+            //             user.ws.send(
+            //                 JSON.stringify({
+            //                     type: "cursorPosition",
+            //                     cursorPosition: data.cursorPosition,
+            //                     userId: userId,
+            //                 })
+            //             );
+            //         }
+            //     });
+            // }
+
+            const handler = requestRouter[data.type];
+            if (handler) {
+                handler(data, { userId, roomId, rooms });
+            } else {
+                console.warn(`Unknown message type: ${data.type}`);
             }
         });
 
