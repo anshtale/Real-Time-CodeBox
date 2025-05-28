@@ -7,9 +7,9 @@ const client = createClient();
 const pubClient = createClient();
 
 async function processSubmission(submission: any) {
-    const { code, language, userId, submissionId, input } = JSON.parse(submission);
+    const { code, language, roomId, submissionId, input } = JSON.parse(submission);
 
-    console.log(`Processing submission ${submissionId}`);
+    console.log(`Processing submission for room id: ${roomId}, submission id: ${submissionId}`);
 
     const codeDir = path.resolve(`./tmp/user-${Date.now()}`);
     await fs.mkdir(codeDir, { recursive: true });
@@ -78,10 +78,10 @@ sh -c "g++ /usr/src/app/userCode.cpp -o /usr/src/app/a.out && /usr/src/app/a.out
             result = `Error: ${error.message}`;
         }
 
-        console.log(`Result for user ${userId} : ${result}`);
+        console.log(`Result for room ${roomId}: ${result}`);
 
         try{
-            await pubClient.publish(userId,result);
+            await pubClient.publish(roomId,result);
         }catch(e){
             console.error("Failed to publish result to Redis,", e)
         }
