@@ -12,16 +12,16 @@ const redisClient = createClient();
 redisClient.on("error", (err) => console.log("Redis Client Error", err));
 
 app.post('/submit', async (req, res) => {
-    const { code, language, userId } = req.body;
+    const { code, language, roomId,input } = req.body;
 
-    const submissionId = `submission-${Date.now()}-${userId}}`
-    console.log(`Received submission from user ${userId}`);
+    const submissionId = `submission-${Date.now()}-${roomId}}`
+    console.log(`Received submission from user ${roomId}`);
 
     try {
-        await redisClient.lPush("problems", JSON.stringify({ code, language, userId, submissionId }));
+        await redisClient.lPush("problems", JSON.stringify({ code, language, roomId, submissionId }));
 
         console.log(
-            `Submission pushed to Redis for: ${userId}  and problem id: ${submissionId}`
+            `Submission pushed to Redis for: ${roomId}  and problem id: ${submissionId}`
         );
 
         res.status(200).send("Submission received and stored");
