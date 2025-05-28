@@ -14,28 +14,41 @@ export const CodeEditor = () => {
 
     useEffect(() => {
         if (!socket) {
-            const ws = new WebSocket(`ws://localhost:5000`, user.id); // Connect to WebSocket server
+            try {
+                const ws = new WebSocket(`ws://localhost:5000`,user.id);
 
-            setSocket(ws);
+                setSocket(ws);
 
-            ws.onopen = () => {
-                console.log("Connected to WebSocket");
-            };
+                ws.onopen = () => {
+                    console.log("Connected to WebSocket");
+                };
 
-            ws.onmessage = (event) => {
-                const data = event.data;
-                setOutput((prevOutput) => [...prevOutput, data]); // Append real-time output
-            };
+                ws.onmessage = (event) => {
+                    const data = event.data;
+                    setOutput((prevOutput) => [...prevOutput, data]); // Append real-time output
+                };
 
-            ws.onclose = () => {
-                console.log("WebSocket connection closed");
-            };
+                ws.onerror = (error) => {
+                    console.error("WebSocket error:", error);
+                    setOutput((prevOutput) => [...prevOutput, "WebSocket connection error"]);
+                };
 
-            return () => {
-                ws.close(); // Cleanup WebSocket connection on unmount
-            };
+                ws.onclose = (event) => {
+                    console.log("WebSocket connection closed", event);
+                };
+
+                // Cleanup
+                return () => {
+                    console.log("Cleaning up WebSocket");
+                    ws.close();
+                };
+            } catch (err) {
+                console.error("Failed to connect to WebSocket:", err);
+                setOutput((prevOutput) => [...prevOutput, "Failed to connect to WebSocket"]);
+            }
         }
-    }, []);
+    }, [socket, user.id]);
+
 
     const handleSubmit = async () => {
         setIsLoading(true);

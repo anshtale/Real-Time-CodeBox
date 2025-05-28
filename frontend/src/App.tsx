@@ -3,7 +3,7 @@ import { Register } from "./pages/Register"
 import { CodeEditor } from "./pages/CodeEditor"
 import ProtectedRouter from "./middleware/ProtectedRouter"
 
-export const App = ()=>{
+const App = ()=>{
 
   return (
     <BrowserRouter>
@@ -17,3 +17,5 @@ export const App = ()=>{
     </BrowserRouter>
   )
 }
+
+export default App;
