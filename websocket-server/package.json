@@ -10,7 +10,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@types/redis": "^4.0.11",
+    "@types/websocket": "^1.0.10",
     "@types/ws": "^8.18.1",
+    "hyperdyperid": "^1.2.0",
     "ws": "^8.18.2"
   }
 }
