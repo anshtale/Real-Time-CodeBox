@@ -74,10 +74,8 @@ async function process() {
 
         pubSubClient.subscribe(roomId, (message) => {
             rooms[roomId].forEach((user: any) => {
-                if (user.userId === userId) {
-                    user.ws.send(JSON.stringify({ type: "output", message }));
-                    console.log("Output sent to user id", user.id);
-                }
+                user.ws.send(JSON.stringify({ type: "output", message }));
+                console.log("Output sent to user id", user.id);
             });
         });
 
