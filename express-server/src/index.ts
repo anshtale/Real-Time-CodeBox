@@ -18,7 +18,7 @@ app.post('/submit', async (req, res) => {
     console.log(`Received submission from user ${roomId}`);
 
     try {
-        await redisClient.lPush("problems", JSON.stringify({ code, language, roomId, submissionId }));
+        await redisClient.lPush("problems", JSON.stringify({ code, language, roomId, submissionId, input }));
 
         console.log(
             `Submission pushed to Redis for: ${roomId}  and problem id: ${submissionId}`
