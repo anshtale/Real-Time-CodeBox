@@ -33,13 +33,23 @@ export const Register = () => {
         }
 
         if(!socket || socket.readyState === WebSocket.CLOSED){
-            //protocol has been used to send userId in initial handshake b/w user and ws-server
-            const ws = new WebSocket(`ws://localhost:8080?roomId=${roomId}`,user.id == "" ? generateId() : user.id);
+            const u = {
+                id:user.id == "" ? generatedId : user.id,
+                name: name
+            }
+            
+            if(name == ""){
+                alert("Please enter a name to continue");
+                setLoading(false);
+                return;
+            }
+            
+            const ws = new WebSocket(`ws://localhost:8080?roomId=${roomId}&id=${u.id}&name=${u.name}`);
 
             setSocket(ws);
 
             ws.onopen = ()=>{
-                console.log("Connected to server");
+                console.log("Connected to WebSocket");
             }
 
             ws.onmessage = (event)=>{

@@ -5,6 +5,7 @@ import { useRecoilState } from "recoil";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { socketAtom } from "../atoms/socketAtom";
 import { useNavigate, useParams } from "react-router-dom";
+import { connectedUsersAtom } from "../atoms/connectedUsersAtom";
 
 export const CodeEditor = () => {
     const [code, setCode] = useState<any>("// Write your code here...");
@@ -14,40 +15,65 @@ export const CodeEditor = () => {
     const [isLoading, setIsLoading] = useState(false); // Loading state
     const [currentButtonState, setCurrentButtonState] = useState("Submit Code");
     const [input, setInput] = useState<string>(""); // Input for code
-    const [user,setUser] = useRecoilState(userAtom);
+    const [user, setUser] = useRecoilState(userAtom);
     const navigate = useNavigate();
 
     // multipleyer state
-    const [users, setUsers] = useState([]);
+    const [connectedUsers, setConnectedUsers] = useRecoilState<any[]>(connectedUsersAtom);
     const params = useParams();
 
     useEffect(() => {
-        if(!socket){
-           navigate('/' + params.roomId);
-        }else{
-            socket.onmessage = (event)=>{
+        if (!socket) {
+            navigate('/' + params.roomId);
+        } else {
+            socket.send(
+                JSON.stringify({
+                    type: "requestToGetUsers",
+                    roomId: user.roomId
+                })
+            );
+
+            socket.onmessage = (event) => {
                 const data = JSON.parse(event.data);
-                if(data.type === 'users'){
-                    setUsers(data.users);
+
+                if (data.type === 'users') {
+                    setConnectedUsers(data.users);
                 }
 
-                if(data.type === "output"){
-                    setOutput((prevOutput)=>[...prevOutput,data.output]);
+                if (data.type === "code") {
+                    setCode(data.code);
+                }
+
+                if (data.type === "output") {
+                    setOutput((prevOutput) => [...prevOutput, data.message]);
+                    handleButtonStatus("Submit Code", false);
+                }
+                if (data.type === "input") {
+                    setInput(data.input);
+                }
+
+                if (data.type === "language") {
+                    setLanguage(data.input);
+                }
+
+                if (data.type === "submitBtnStatus") {
+                    setCurrentButtonState(data.value);
+                    setIsLoading(data.isLoading);
                 }
             }
 
-            socket.onclose = ()=>{
+            socket.onclose = () => {
                 console.log('Socket closed');
                 setUser({
-                    id:"",
-                    name:"",
-                    roomId:""
+                    id: "",
+                    name: "",
+                    roomId: ""
                 })
 
                 setSocket(null);
             }
 
-            return ()=>{
+            return () => {
                 socket?.close();
             }
         }
@@ -55,12 +81,11 @@ export const CodeEditor = () => {
 
 
     const handleSubmit = async () => {
-        setIsLoading(true);
-        setCurrentButtonState("Submitting...");
+        handleButtonStatus("Submitting...", true);
         const submission = {
             code,
             language,
-            userId: user?.id,
+            roomId: user.roomId,
         };
 
         socket?.send(user?.id ? user.id : "");
@@ -75,17 +100,66 @@ export const CodeEditor = () => {
             body: JSON.stringify(submission),
         });
 
-        setCurrentButtonState("Compiling...");
+        handleButtonStatus("Compiling...", true);
 
         if (!res.ok) {
             setOutput((prevOutput) => [
                 ...prevOutput,
                 "Error submitting code. Please try again.",
             ]);
-            setIsLoading(false);
-            setCurrentButtonState("Submit Code");
+            handleButtonStatus("Submit Code", false);
         }
 
+    }
+
+    const handleCodeChange = (value: any) => {
+        setCode(value);
+        socket?.send(
+            JSON.stringify({
+                type: "code",
+                code: value,
+                roomId: user.roomId
+            })
+        )
+    }
+
+    const handleInputChange = (e: any) => {
+        setInput(e.target.value);
+        socket?.send(
+            JSON.stringify({
+                type: "input",
+                input: e.target.value,
+                roomId: user.roomId
+            })
+        )
+    }
+
+    const handleLanguageChange = (value: any) => {
+        setLanguage(value);
+        socket?.send(
+            JSON.stringify({
+                type: "language",
+                language: value,
+                roomId: user.roomId
+            })
+        )
+    }
+
+    const handleButtonStatus = (value: any, isLoading: any) => {
+        setCurrentButtonState(value);
+        setIsLoading(isLoading);
+        socket?.send(
+            JSON.stringify({
+                type: "submitBtnStatus",
+                value: value,
+                isLoading: isLoading,
+                roomId: user.roomId
+            })
+        )
+    }
+
+    function index(value: any, index: number, array: any[]): unknown {
+        throw new Error("Function not implemented.");
     }
 
     return (
@@ -116,7 +190,7 @@ export const CodeEditor = () => {
                                 {/* Language Selector */}
                                 <select
                                     value={language}
-                                    onChange={(e) => setLanguage(e.target.value)}
+                                    onChange={(e) => handleLanguageChange(e.target.value)}
                                     className="bg-gray-800 h-10 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-lg transition duration-300"
                                 >
                                     <option value="javascript">JavaScript</option>
@@ -135,7 +209,7 @@ export const CodeEditor = () => {
                                 value={code}
                                 language={language}
                                 theme="vs-dark"
-                                onChange={setCode}
+                                onChange={(value) => handleCodeChange(value)}
                                 height={"90vh"}
                             />
                         </div>
@@ -147,15 +221,19 @@ export const CodeEditor = () => {
                         {/* user connected and invition code */}
                         <div className="flex justify-between ">
                             {/* User Connected */}
-                            <div>
+                            <div className="w-1">
                                 <h2 className="text-xl font-bold text-gray-400">Users:</h2>
-                                <div className="bg-gray-800 text-green-400 p-4  rounded-lg mt-2 overflow-y-auto shadow-lg ">
-                                    {users.length > 0 ? (
-                                        users.map((user, index) => (
-                                            <pre key={index} className="whitespace-pre-wrap">{user}</pre>
+                                <div className="bg-gray-800 text-green-400 p-4 rounded-lg mt-2 overflow-y-auto shadow-lg">
+                                    {connectedUsers.length > 0 ? (
+                                        connectedUsers.map((user:any,index:number)=>(
+                                            <pre className="whitespace-pre-warp" key = {index}>
+                                                {user.name}
+                                            </pre>
                                         ))
                                     ) : (
-                                        <p className="text-gray-500">No user connected yet.</p>
+                                        <p className="text-gray-500">
+                                            No user
+                                        </p>
                                     )}
                                 </div>
                             </div>
@@ -179,7 +257,7 @@ export const CodeEditor = () => {
                             <textarea
                                 value={input}
                                 style={{ height: "120px" }}
-                                onChange={(e) => setInput(e.target.value)}
+                                onChange={(e) => handleInputChange(e)}
                                 placeholder={`Enter input for your code like... \n5 \n10`}
                                 className="bg-gray-800 text-white w-full p-4 rounded-lg shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mt-2"
                             />
