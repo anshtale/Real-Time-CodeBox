@@ -66,7 +66,7 @@ async function process() {
         const updatedUser = [...users, { id: userId, name }]
 
         rooms[roomId].forEach((user: any) => {
-            user.ws.send(JSON.stringify({ type: "users", updatedUser }));
+            user.ws.send(JSON.stringify({ type: "users", users: updatedUser }));
         });
 
         rooms[roomId].push({ userId, ws, name });
