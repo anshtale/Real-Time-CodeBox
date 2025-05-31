@@ -2,10 +2,13 @@ import { useState, useEffect } from "react";
 import { CodeiumEditor } from "@codeium/react-code-editor";
 import { userAtom } from "../atoms/userAtom";
 import { useRecoilState } from "recoil";
-import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { socketAtom } from "../atoms/socketAtom";
 import { useNavigate, useParams } from "react-router-dom";
 import { connectedUsersAtom } from "../atoms/connectedUsersAtom";
+import { CodeEditorHeader } from "@/components/CodeEditorHeader";
+import { UserList } from "@/components/UsersList";
+import { CodeOutput } from "@/components/CodeOutput";
+import { toast } from "sonner";
 
 export const CodeEditor = () => {
     const [code, setCode] = useState<any>("// Write your code here...");
@@ -37,6 +40,7 @@ export const CodeEditor = () => {
                 const data = JSON.parse(event.data);
 
                 if (data.type === 'users') {
+                    toast.success("Users updated in room")
                     setConnectedUsers(data.users);
                 }
 
@@ -46,6 +50,9 @@ export const CodeEditor = () => {
 
                 if (data.type === "output") {
                     setOutput((prevOutput) => [...prevOutput, data.message]);
+                    toast.success("Code compiled successfully",{
+                        description: "You can see the code output in output section",
+                    })
                     handleButtonStatus("Submit Code", false);
                 }
                 if (data.type === "input") {
@@ -53,7 +60,8 @@ export const CodeEditor = () => {
                 }
 
                 if (data.type === "language") {
-                    setLanguage(data.input);
+                    toast.success(`Language changed to ${data.language}`)
+                    setLanguage(data.language);
                 }
 
                 if (data.type === "submitBtnStatus") {
@@ -81,12 +89,18 @@ export const CodeEditor = () => {
 
 
     const handleSubmit = async () => {
+        console.log("clicked")
         handleButtonStatus("Submitting...", true);
+
         const submission = {
             code,
             language,
             roomId: user.roomId,
+            input
         };
+
+        console.log("submission here->")
+        console.log(JSON.stringify(submission));
 
         socket?.send(user?.id ? user.id : "");
 
@@ -157,138 +171,44 @@ export const CodeEditor = () => {
             })
         )
     }
-
-    function index(value: any, index: number, array: any[]): unknown {
-        throw new Error("Function not implemented.");
-    }
-
     return (
-        <div className="min-h-screen  bg-gray-900 text-white px-4 pt-4">
-            <div className=" mx-auto">
+        <div className="w-full h-full min-h-screen  min-w-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 text-white">            
+            <div className="container mx-auto p-4 max-w-7xl">
+                <CodeEditorHeader
+                    language={language}
+                    onLanguageChange={handleLanguageChange}
+                    onSubmit={handleSubmit}
+                    isLoading={isLoading}
+                    currentButtonState={currentButtonState}
+                />
 
-
-                <div className="flex space-x-4">
-                    {/* Left Side: Code Editor */}
-                    <div className="w-3/4">
-                        <div className="flex justify-between mb-4 px-3">
-                            <label className="text-white text-3xl">Code Together</label>
-                            <div className="flex gap-3">
-
-                                {/* Submit Button */}
-                                <div className="flex justify-center ">
-                                    <button
-                                        onClick={handleSubmit}
-                                        className={`bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-2 rounded-lg shadow-lg transition-transform duration-300 transform ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                        disabled={isLoading}
-                                    >
-                                        <span className="flex items-center space-x-2">
-                                            {isLoading && <AiOutlineLoading3Quarters className="animate-spin" />}
-                                            <span>{currentButtonState}</span>
-                                        </span>
-                                    </button>
-                                </div>
-                                {/* Language Selector */}
-                                <select
-                                    value={language}
-                                    onChange={(e) => handleLanguageChange(e.target.value)}
-                                    className="bg-gray-800 h-10 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-lg transition duration-300"
-                                >
-                                    <option value="javascript">JavaScript</option>
-                                    <option value="python">Python</option>
-                                    <option value="cpp">C++</option>
-                                    <option value="java">Java</option>
-                                    <option value="rust">Rust</option>
-                                    <option value="go">Go</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        {/* Code Editor */}
-                        <div className="border border-gray-700 rounded-tl-lg rounded-bl-lg overflow-hidden shadow-lg ">
+                <div className="grid grid-cols-1 xl:grid-cols-4 gap-6 h-[calc(100vh-160px)]">
+                    {/* Code Editor - Takes most space on desktop */}
+                    <div className="xl:col-span-2 order-2 xl:order-1">
+                        <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl overflow-hidden shadow-xl h-full">
                             <CodeiumEditor
                                 value={code}
                                 language={language}
                                 theme="vs-dark"
                                 onChange={(value) => handleCodeChange(value)}
-                                height={"90vh"}
+                                height="100%"
                             />
                         </div>
                     </div>
 
-                    {/* Right Side: Input and Output */}
-                    <div className="w-1/4 flex flex-col space-y-4">
+                    {/* User List - Left sidebar on desktop, top on mobile */}
+                    <div className="xl:col-span-1 order-1 xl:order-2">
+                        <UserList users={connectedUsers} roomId={user.roomId} />
+                    </div>
 
-                        {/* user connected and invition code */}
-                        <div className="flex justify-between ">
-                            {/* User Connected */}
-                            <div className="w-1">
-                                <h2 className="text-xl font-bold text-gray-400">Users:</h2>
-                                <div className="bg-gray-800 text-green-400 p-4 rounded-lg mt-2 overflow-y-auto shadow-lg">
-                                    {connectedUsers.length > 0 ? (
-                                        connectedUsers.map((user:any,index:number)=>(
-                                            <pre className="whitespace-pre-warp" key = {index}>
-                                                {user.name}
-                                            </pre>
-                                        ))
-                                    ) : (
-                                        <p className="text-gray-500">
-                                            No user
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-                            {/* Invitation Code */}
-                            <div>
-                                <h2 className="text-xl font-bold text-gray-400">Invitation Code:</h2>
-                                <div className="bg-gray-800 text-green-400 p-4 rounded-lg mt-2  overflow-y-auto shadow-lg ">
-                                    {user.roomId.length > 0 ? (
-                                        <pre className="whitespace-pre-wrap">
-                                            {user.roomId}
-                                        </pre>
-                                    ) : (
-                                        <p className="text-gray-500">No invitation code yet.</p>
-                                    )}
-                                </div>
-                            </div>
-                        </div>
-                        {/* Input Section */}
-                        <div>
-                            <h2 className="text-xl font-bold text-gray-400">Input:</h2>
-                            <textarea
-                                value={input}
-                                style={{ height: "120px" }}
-                                onChange={(e) => handleInputChange(e)}
-                                placeholder={`Enter input for your code like... \n5 \n10`}
-                                className="bg-gray-800 text-white w-full p-4 rounded-lg shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mt-2"
-                            />
-                        </div>
-
-
-
-                        {/* Output Section */}
-                        <div className="flex-1">
-
-
-                            <div className="flex justify-between px-2">
-                                <h2 className="text-xl font-bold text-gray-400">Output:</h2>
-                                <button
-                                    onClick={() => setOutput([])}
-                                    className="text-red-500 hover:text-red-600"
-                                >
-                                    Clear
-                                </button>
-                            </div>
-
-                            <div className="bg-gray-800 text-green-400 p-4 max-h-[60vh] rounded-lg mt-2 h-full overflow-y-auto shadow-lg space-y-2 ">
-                                {output.length > 0 ? (
-                                    output.map((line, index) => (
-                                        <pre key={index} className="whitespace-pre-wrap">{line}</pre>
-                                    ))
-                                ) : (
-                                    <p className="text-gray-500">No output yet. Submit your code to see results.</p>
-                                )}
-                            </div>
-                        </div>
+                    {/* Input/Output - Right sidebar on desktop, bottom on mobile */}
+                    <div className="xl:col-span-1 order-3">
+                        <CodeOutput
+                            output={output}
+                            onClear={() => setOutput([])}
+                            input={input}
+                            onInputChange={handleInputChange}
+                        />
                     </div>
                 </div>
             </div>
