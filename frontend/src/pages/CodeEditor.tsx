@@ -1,58 +1,54 @@
 import { useState, useEffect } from "react";
 import { CodeiumEditor } from "@codeium/react-code-editor";
 import { userAtom } from "../atoms/userAtom";
-import { useRecoilValue } from "recoil";
+import { useRecoilState } from "recoil";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { socketAtom } from "../atoms/socketAtom";
+import { useNavigate, useParams } from "react-router-dom";
 
 export const CodeEditor = () => {
     const [code, setCode] = useState<any>("// Write your code here...");
     const [language, setLanguage] = useState("javascript");
     const [output, setOutput] = useState<string[]>([]); // Output logs
-    const [socket, setSocket] = useState<WebSocket | null>(null);
+    const [socket, setSocket] = useRecoilState<WebSocket | null>(socketAtom);
     const [isLoading, setIsLoading] = useState(false); // Loading state
     const [currentButtonState, setCurrentButtonState] = useState("Submit Code");
     const [input, setInput] = useState<string>(""); // Input for code
-    const user = useRecoilValue(userAtom);
+    const [user,setUser] = useRecoilState(userAtom);
+    const navigate = useNavigate();
 
     // multipleyer state
     const [users, setUsers] = useState([]);
-    const [invitationCode, setInvitationCode] = useState("");
+    const params = useParams();
 
     useEffect(() => {
-        if (!socket) {
-            try {
-                const ws = new WebSocket(`ws://localhost:8080`, user.id);
+        if(!socket){
+           navigate('/' + params.roomId);
+        }else{
+            socket.onmessage = (event)=>{
+                const data = JSON.parse(event.data);
+                if(data.type === 'users'){
+                    setUsers(data.users);
+                }
 
-                setSocket(ws);
+                if(data.type === "output"){
+                    setOutput((prevOutput)=>[...prevOutput,data.output]);
+                }
+            }
 
-                ws.onopen = () => {
-                    console.log("Connected to WebSocket");
-                };
+            socket.onclose = ()=>{
+                console.log('Socket closed');
+                setUser({
+                    id:"",
+                    name:"",
+                    roomId:""
+                })
 
-                ws.onmessage = (event) => {
-                    const data = event.data;
-                    setOutput((prevOutput) => [...prevOutput, data]); // Append real-time output
-                    setIsLoading(false);
-                    setCurrentButtonState("Submit Code");
-                };
+                setSocket(null);
+            }
 
-                ws.onerror = (error) => {
-                    console.error("WebSocket error:", error);
-                    setOutput((prevOutput) => [...prevOutput, "WebSocket connection error"]);
-                };
-
-                ws.onclose = (event) => {
-                    console.log("WebSocket connection closed", event);
-                };
-
-                // Cleanup
-                return () => {
-                    console.log("Cleaning up WebSocket");
-                    ws.close();
-                };
-            } catch (err) {
-                console.error("Failed to connect to WebSocket:", err);
-                setOutput((prevOutput) => [...prevOutput, "Failed to connect to WebSocket"]);
+            return ()=>{
+                socket?.close();
             }
         }
     }, [socket, user.id]);
@@ -85,6 +81,8 @@ export const CodeEditor = () => {
                 ...prevOutput,
                 "Error submitting code. Please try again.",
             ]);
+            setIsLoading(false);
+            setCurrentButtonState("Submit Code");
         }
 
     }
@@ -164,8 +162,10 @@ export const CodeEditor = () => {
                             <div>
                                 <h2 className="text-xl font-bold text-gray-400">Invitation Code:</h2>
                                 <div className="bg-gray-800 text-green-400 p-4 rounded-lg mt-2  overflow-y-auto shadow-lg ">
-                                    {invitationCode.length > 0 ? (
-                                        <pre className="whitespace-pre-wrap">{invitationCode}</pre>
+                                    {user.roomId.length > 0 ? (
+                                        <pre className="whitespace-pre-wrap">
+                                            {user.roomId}
+                                        </pre>
                                     ) : (
                                         <p className="text-gray-500">No invitation code yet.</p>
                                     )}
