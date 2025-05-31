@@ -56,6 +56,7 @@ export const CodeEditor = () => {
 
     const handleSubmit = async () => {
         setIsLoading(true);
+        setCurrentButtonState("Submitting...");
         const submission = {
             code,
             language,
@@ -74,7 +75,7 @@ export const CodeEditor = () => {
             body: JSON.stringify(submission),
         });
 
-        setIsLoading(false);
+        setCurrentButtonState("Compiling...");
 
         if (!res.ok) {
             setOutput((prevOutput) => [
