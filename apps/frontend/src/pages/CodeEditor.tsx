@@ -154,7 +154,7 @@ export const CodeEditor = () => {
 
         console.log(submission);
 
-        const res = await fetch("http://192.168.179.47/:3000/submit", {
+        const res = await fetch(`${process.env.PRIMARY_BACKEND_URL}/submit`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
