@@ -56,7 +56,7 @@ export const Register = () => {
                 return;
             }
             
-            const ws = new WebSocket(`ws://localhost:5000?roomId=${roomId}&id=${u.id}&name=${u.name}`);
+            const ws = new WebSocket(`${import.meta.env.VITE_WEBSOCKET_SERVER_URL}?roomId=${roomId}&id=${u.id}&name=${u.name}`);
 
             setSocket(ws);
 

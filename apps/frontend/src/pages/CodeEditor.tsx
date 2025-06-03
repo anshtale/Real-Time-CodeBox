@@ -154,7 +154,7 @@ export const CodeEditor = () => {
 
         console.log(submission);
 
-        const res = await fetch(`${process.env.PRIMARY_BACKEND_URL}/submit`, {
+        const res = await fetch(`${import.meta.env.VITE_PRIMARY_BACKEND_URL}/submit`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
