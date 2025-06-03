@@ -3,11 +3,16 @@ import { WebSocketServer } from "ws"
 import { createClient } from "redis"
 import { error } from "console";
 import requestRouter from "./routers/router";
+import dotenv from "dotenv";
 const { str10_36 } = require('hyperdyperid/lib/str10_36');
+
+dotenv.config();
 
 const server = http.createServer();
 const wss = new WebSocketServer({ server });
-const pubSubClient = createClient();
+const pubSubClient = createClient({
+    url: process.env.REDIS_URL
+});
 
 const rooms: any = {};
 
@@ -16,7 +21,7 @@ function generateRoomId() {
     return id;
 }
 
-async function process() {
+async function start_process() {
     console.log("inside");
     pubSubClient.on("error", (err) => {
         console.log("Redis PubSub Client Error", err);
@@ -37,7 +42,7 @@ async function process() {
 
             ws.send(
                 JSON.stringify({
-                    isNewRoom: true,
+                isNewRoom: true,
                     type: "roomId",
                     roomId,
                     message: `Created new room with ID : ${roomId}`
@@ -231,14 +236,14 @@ async function process() {
     });
 
     server.listen(5000, '0.0.0.0', () => {
-        console.log("web socket server started on 5000");
+        console.log("web socket server started on 5000", server.address());
     });
 }
 
 async function main() {
     try {
         await pubSubClient.connect();
-        await process();
+        await start_process();
         console.log("Redis Client connected");
     } catch (e) {
         console.log("Failed to connect to Redis", error);
