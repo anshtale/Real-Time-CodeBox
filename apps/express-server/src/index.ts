@@ -11,10 +11,14 @@ app.use(express.json());
 app.use(cors());
 
 const redisClient = createClient({
-    url: process.env.REDIS_URL,
+    url: process.env.REDIS_URL
 });
 
 redisClient.on("error", (err) => console.log("Redis Client Error", err));
+
+app.get('/', (req, res) => {
+    res.send('Hello World!');
+})
 
 app.post('/submit', async (req, res) => {
     const { code, language, roomId,input } = req.body;
