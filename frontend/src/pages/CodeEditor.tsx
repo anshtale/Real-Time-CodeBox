@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { CodeiumEditor } from "@codeium/react-code-editor";
 import MonacoEditor from '@monaco-editor/react';
 import { userAtom } from "../atoms/userAtom";
 import { useRecoilState } from "recoil";
