@@ -1,13 +1,18 @@
 import express from "express";
 import { createClient } from "redis";
 import cors from 'cors'
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const app = express();
 
 app.use(express.json());
 app.use(cors());
 
-const redisClient = createClient();
+const redisClient = createClient({
+    url: process.env.REDIS_URL,
+});
 
 redisClient.on("error", (err) => console.log("Redis Client Error", err));
 
@@ -31,7 +36,7 @@ app.post('/submit', async (req, res) => {
     }
 })
 
-const server = app.listen(3000, () => {
+const server = app.listen(3000,'0.0.0.0', () => {
     console.log("Express Server Listening on port 3000");
 });
 
