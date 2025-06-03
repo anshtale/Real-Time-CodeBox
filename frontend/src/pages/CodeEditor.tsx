@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { CodeiumEditor } from "@codeium/react-code-editor";
+import MonacoEditor from '@monaco-editor/react';
 import { userAtom } from "../atoms/userAtom";
 import { useRecoilState } from "recoil";
 import { socketAtom } from "../atoms/socketAtom";
@@ -36,39 +37,11 @@ export const CodeEditor = () => {
                 })
             );
 
-            socket.onmessage = (event) => {
-                const data = JSON.parse(event.data);
-
-                if (data.type === 'users') {
-                    toast.success("Users updated in room")
-                    setConnectedUsers(data.users);
-                }
-
-                if (data.type === "code") {
-                    setCode(data.code);
-                }
-
-                if (data.type === "output") {
-                    setOutput((prevOutput) => [...prevOutput, data.message]);
-                    toast.success("Code compiled successfully",{
-                        description: "You can see the code output in output section",
-                    })
-                    handleButtonStatus("Submit Code", false);
-                }
-                if (data.type === "input") {
-                    setInput(data.input);
-                }
-
-                if (data.type === "language") {
-                    toast.success(`Language changed to ${data.language}`)
-                    setLanguage(data.language);
-                }
-
-                if (data.type === "submitBtnStatus") {
-                    setCurrentButtonState(data.value);
-                    setIsLoading(data.isLoading);
-                }
-            }
+            socket.send(
+                JSON.stringify({
+                    type: "requestForAllData",
+                })
+            )
 
             socket.onclose = () => {
                 console.log('Socket closed');
@@ -87,6 +60,82 @@ export const CodeEditor = () => {
         }
     }, [socket, user.id]);
 
+    useEffect(() => {
+        if (!socket) {
+            navigate('/' + params.roomId);
+        } else {
+            socket.onmessage = (event) => {
+                const data = JSON.parse(event.data);
+
+                if (data.type === 'users') {
+                    toast.success("Users updated in room")
+                    setConnectedUsers(data.users);
+                }
+
+                if (data.type === "code") {
+                    setCode(data.code);
+                }
+
+                if (data.type === "output") {
+                    setOutput((prevOutput) => [...prevOutput, data.message]);
+                    toast.success("Code compiled successfully", {
+                        description: "You can see the code output in output section",
+                    })
+                    handleButtonStatus("Submit Code", false);
+                }
+                if (data.type === "input") {
+                    setInput(data.input);
+                }
+
+                if (data.type === "language") {
+                    toast.success(`Language changed to ${data.language}`)
+                    setLanguage(data.language);
+                }
+
+                if (data.type === "submitBtnStatus") {
+                    setCurrentButtonState(data.value);
+                    setIsLoading(data.isLoading);
+                }
+
+                if(data.type === "cursorPosition") {
+                    const updatedUsers = connectedUsers.map((user) => {
+                        if(user.id === data.userId) {
+                            return {
+                                ...user,
+                                cursorPosition: data.cursorPosition
+                            }
+                        }
+                        return user;
+                    });
+                    setConnectedUsers(updatedUsers);
+                }
+
+                if(data.type === "requestForAllData") {
+                    socket.send(
+                        JSON.stringify({
+                            type: "allData",
+                            code: code,
+                            language: language,
+                            input: input,
+                            output: output,
+                            currentButtonState,
+                            isLoading,
+                            userId: data.userId
+                        })
+                    )
+                }
+
+                if(data.type === "allData") {
+                    setCode(data.code);
+                    setLanguage(data.language);
+                    setInput(data.input);
+                    setCurrentButtonState(data.currentButtonState);
+                    setIsLoading(data.isLoading);
+                }
+            }
+
+        }
+    },[code, input, language, currentButtonState, isLoading, connectedUsers])
 
     const handleSubmit = async () => {
         console.log("clicked")
@@ -106,7 +155,7 @@ export const CodeEditor = () => {
 
         console.log(submission);
 
-        const res = await fetch("http://localhost:3000/submit", {
+        const res = await fetch("http://192.168.179.47/:3000/submit", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -171,8 +220,42 @@ export const CodeEditor = () => {
             })
         )
     }
+
+    const handleEditorDidMount = (editor: any) => {
+        if(editor){
+            editor.onDidChangeCursorPosition((e: any) => {
+                const cursorPosition = editor.getPosition();
+                socket?.send(
+                    JSON.stringify({
+                        type: "cursorPosition",
+                        cursorPosition: cursorPosition,
+                        user: user.id
+                    })
+                )
+            })
+
+            editor.onDidChangeModelContent((e: any) => {
+                setCode(editor.getValue());
+                socket?.send(
+                    JSON.stringify({
+                        type: "code",
+                        code: editor.getValue(),
+                        roomId: user.roomId
+                    })
+                )
+            })
+
+            editor.onDidChangeCursorSelection((e: any) => {
+                const selection = editor.getSelection();
+                const selectedText = editor.getModel()?.getValueInRange(selection);
+                console.log("Selected Code:", selectedText);
+            })
+        }
+
+    }
+
     return (
-        <div className="w-full h-full min-h-screen  min-w-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 text-white">            
+        <div className="w-full h-full min-h-screen  min-w-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 text-white">
             <div className="container mx-auto p-4 max-w-7xl">
                 <CodeEditorHeader
                     language={language}
@@ -186,12 +269,13 @@ export const CodeEditor = () => {
                     {/* Code Editor - Takes most space on desktop */}
                     <div className="xl:col-span-2 order-2 xl:order-1">
                         <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl overflow-hidden shadow-xl h-full">
-                            <CodeiumEditor
+                            <MonacoEditor
                                 value={code}
                                 language={language}
                                 theme="vs-dark"
-                                onChange={(value) => handleCodeChange(value)}
-                                height="100%"
+                                onChange={(value)=>handleCodeChange(value)}
+                                height="80vh"
+                                onMount={handleEditorDidMount}
                             />
                         </div>
                     </div>
