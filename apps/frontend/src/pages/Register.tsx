@@ -49,13 +49,13 @@ export const Register = () => {
             }
 
             console.log(user.id)
-            
+
             if (name == "") {
                 alert("Please enter a name to continue");
                 setLoading(false);
                 return;
             }
-            
+
             const ws = new WebSocket(`${import.meta.env.VITE_WEBSOCKET_SERVER_URL}?roomId=${roomId}&id=${u.id}&name=${u.name}`);
 
             setSocket(ws);
@@ -110,9 +110,9 @@ export const Register = () => {
     }, [])
 
     return (
-        <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-gradient-to-br from-gray-900 to-gray-800 flex items-center justify-center">
+        <div className="fixed inset-0 w-screen h-screen overflow-y-auto bg-gradient-to-br from-gray-900 to-gray-800 py-8 flex items-start justify-center">
             <GridPattern />
-            <div className="w-full max-w-md px-4 sm:px-0 relative z-10">
+            <div className="w-full max-w-md px-4 sm:px-0 relative z-10 mt-8 mb-8">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -128,7 +128,7 @@ export const Register = () => {
                         <h1 className="text-3xl font-bold text-white mb-2">CodeSync</h1>
                         <p className="text-gray-400">Real-time collaborative coding platform</p>
                     </div>
-                    
+
                     <div className="bg-gray-800/90 backdrop-blur-sm rounded-xl shadow-xl p-6 border border-gray-700/50">
                         <div className="space-y-5">
                             <div>
@@ -147,7 +147,7 @@ export const Register = () => {
                                     />
                                 </div>
                             </div>
-                            
+
                             <div>
                                 <label htmlFor="roomId" className="block text-sm font-medium text-gray-300 mb-1.5">Room ID</label>
                                 <div className="relative">
@@ -165,19 +165,19 @@ export const Register = () => {
                                 </div>
                                 <p className="mt-1.5 text-xs text-gray-400">Leave empty to create a new room</p>
                             </div>
-                            
+
                             <div className="pt-2 space-y-3">
-                                <Button 
-                                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium py-5 rounded-lg transition-all duration-200 flex items-center justify-center gap-2" 
+                                <Button
+                                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-medium py-5 rounded-lg transition-all duration-200 flex items-center justify-center gap-2"
                                     disabled={loading || !name}
                                     onClick={handleNewRoom}
                                 >
                                     <FiCode className="h-4 w-4" />
                                     {loading ? 'Creating...' : 'Create New Room'}
                                 </Button>
-                                
-                                <Button 
-                                    className="w-full bg-gray-700 hover:bg-gray-600 text-white font-medium py-5 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 border border-gray-600/50" 
+
+                                <Button
+                                    className="w-full bg-gray-700 hover:bg-gray-600 text-white font-medium py-5 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 border border-gray-600/50"
                                     disabled={loading || !roomId || !name}
                                     onClick={handleJoinRoom}
                                 >
@@ -187,6 +187,32 @@ export const Register = () => {
                             </div>
                         </div>
                     </div>
+
+                    <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.4, delay: 0.2 }}
+                        className="mt-6 p-4 bg-yellow-900/30 border border-yellow-700/50 rounded-xl shadow-lg text-yellow-200 text-sm"
+                    >
+                        <p className="font-semibold mb-2">Important Note for Connection:</p>
+                        <p>
+                            Due to using a self-signed SSL certificate for this personal project, your browser will likely show a security warning when connecting to the WebSocket server.
+                        </p>
+                        <p className="mt-2 text-left">
+                            To bypass this, please follow these steps:
+                            <ol className="list-decimal list-inside mt-2">
+                                <li>Visit <a href="https://ec2-54-87-166-112.compute-1.amazonaws.com" target="_blank" rel="noopener noreferrer" className="text-blue-500 underline">https://ec2-54-87-166-112.compute-1.amazonaws.com</a> in a new tab.</li>
+                                <div className="m-2"></div>
+                                <li>Click "Advanced" (or similar, depending on your browser).</li>
+                                <div className="m-2"></div>
+
+                                <li>Click "Proceed to ec2-54-87-166-112.compute-1.amazonaws.com (unsafe)" to temporarily trust the certificate.</li>
+                                <div className="m-2"></div>
+
+                                <li>Return to this page and create/join a room.</li>
+                            </ol>
+                        </p>
+                    </motion.div>
                 </motion.div>
             </div>
         </div>
