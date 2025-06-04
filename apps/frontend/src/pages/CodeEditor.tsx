@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import MonacoEditor from '@monaco-editor/react';
+import { CodeiumEditor } from "@codeium/react-code-editor";
 import { userAtom } from "../atoms/userAtom";
 import { useRecoilState } from "recoil";
 import { socketAtom } from "../atoms/socketAtom";
@@ -175,18 +175,6 @@ export const CodeEditor = () => {
 
     }
 
-
-    const handleCodeChange = (value: any) => {
-        setCode(value);
-        socket?.send(
-            JSON.stringify({
-                type: "code",
-                code: value,
-                roomId: user.roomId
-            })
-        )
-    }
-
     const handleInputChange = (e: any) => {
         setInput(e.target.value);
         socket?.send(
@@ -222,38 +210,49 @@ export const CodeEditor = () => {
         )
     }
 
-    const handleEditorDidMount = (editor: any) => {
-        if(editor){
-            // editor.onDidChangeCursorPosition((e: any) => {
-            //     const cursorPosition = editor.getPosition();
-            //     socket?.send(
-            //         JSON.stringify({
-            //             type: "cursorPosition",
-            //             cursorPosition: cursorPosition,
-            //             user: user.id
-            //         })
-            //     )
-            // })
-
-            editor.onDidChangeModelContent((e: any) => {
-                setCode(editor.getValue());
-                socket?.send(
-                    JSON.stringify({
-                        type: "code",
-                        code: editor.getValue(),
-                        roomId: user.roomId
-                    })
-                )
+    const handleCodeChange = (value: any) => {
+        setCode(value);
+        socket?.send(
+            JSON.stringify({
+                type: "code",
+                code: value,
+                roomId: user.roomId
             })
-
-            editor.onDidChangeCursorSelection((e: any) => {
-                const selection = editor.getSelection();
-                const selectedText = editor.getModel()?.getValueInRange(selection);
-                console.log("Selected Code:", selectedText);
-            })
-        }
-
+        )
     }
+
+    // const handleEditorDidMount = (editor: any) => {
+    //     if(editor){
+    //         // editor.onDidChangeCursorPosition((e: any) => {
+    //         //     const cursorPosition = editor.getPosition();
+    //         //     socket?.send(
+    //         //         JSON.stringify({
+    //         //             type: "cursorPosition",
+    //         //             cursorPosition: cursorPosition,
+    //         //             user: user.id
+    //         //         })
+    //         //     )
+    //         // })
+
+    //         editor.onDidChangeModelContent((e: any) => {
+    //             setCode(editor.getValue());
+    //             socket?.send(
+    //                 JSON.stringify({
+    //                     type: "code",
+    //                     code: editor.getValue(),
+    //                     roomId: user.roomId
+    //                 })
+    //             )
+    //         })
+
+    //         // editor.onDidChangeCursorSelection((e: any) => {
+    //         //     const selection = editor.getSelection();
+    //         //     const selectedText = editor.getModel()?.getValueInRange(selection);
+    //         //     console.log("Selected Code:", selectedText);
+    //         // })
+    //     }
+
+    // }
 
     return (
         <div className="w-full h-full min-h-screen  min-w-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-900 text-white">
@@ -270,14 +269,29 @@ export const CodeEditor = () => {
                     {/* Code Editor - Takes most space on desktop */}
                     <div className="xl:col-span-2 order-2 xl:order-1">
                         <div className="bg-white/10 backdrop-blur-lg border border-white/20 rounded-xl overflow-hidden shadow-xl h-full">
-                            <MonacoEditor
+                            {/* <MonacoEditor
+                                options={{
+                                    smoothScrolling: true,
+                                    fastScrollSensitivity: 1,
+                                    scrollBeyondLastLine: false,
+                                    minimap: {
+                                        enabled: false,
+                                    },
+                                }}
                                 value={code}
                                 language={language}
                                 theme="vs-dark"
-                                onChange={(value)=>handleCodeChange(value)}
                                 height="80vh"
                                 onMount={handleEditorDidMount}
-                            />
+                            /> */}
+                            <div className="flex flex-grow h-full">
+                                <CodeiumEditor
+                                    value={code}
+                                    language={language}
+                                    theme="vs-dark"
+                                    onChange={(value) => handleCodeChange(value)}
+                                />
+                            </div>
                         </div>
                     </div>
 
