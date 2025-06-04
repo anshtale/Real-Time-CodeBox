@@ -126,8 +126,8 @@ export const CodeEditor = () => {
                 }
 
                 if(data.type === "allData") {
-                    setCode(data.code);
                     setLanguage(data.language);
+                    setCode(data.code);
                     setInput(data.input);
                     setCurrentButtonState(data.currentButtonState);
                     setIsLoading(data.isLoading);
@@ -154,7 +154,7 @@ export const CodeEditor = () => {
         socket?.send(user?.id ? user.id : "");
 
         console.log(submission);
-
+        console.log(`${import.meta.env.VITE_PRIMARY_BACKEND_URL}`)
         const res = await fetch(`${import.meta.env.VITE_PRIMARY_BACKEND_URL}/submit`, {
             method: "POST",
             headers: {
@@ -290,6 +290,7 @@ export const CodeEditor = () => {
                                     language={language}
                                     theme="vs-dark"
                                     onChange={(value) => handleCodeChange(value)}
+                                    height="80vh"
                                 />
                             </div>
                         </div>
