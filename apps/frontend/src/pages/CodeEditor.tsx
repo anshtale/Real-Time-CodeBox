@@ -10,6 +10,7 @@ import { UserList } from "@/components/UsersList";
 import { CodeOutput } from "@/components/CodeOutput";
 import { toast } from "sonner";
 
+
 export const CodeEditor = () => {
     const [code, setCode] = useState<any>("// Write your code here...");
     const [language, setLanguage] = useState("javascript");
@@ -96,18 +97,18 @@ export const CodeEditor = () => {
                     setIsLoading(data.isLoading);
                 }
 
-                if(data.type === "cursorPosition") {
-                    const updatedUsers = connectedUsers.map((user) => {
-                        if(user.id === data.userId) {
-                            return {
-                                ...user,
-                                cursorPosition: data.cursorPosition
-                            }
-                        }
-                        return user;
-                    });
-                    setConnectedUsers(updatedUsers);
-                }
+                // if(data.type === "cursorPosition") {
+                //     const updatedUsers = connectedUsers.map((user) => {
+                //         if(user.id === data.userId) {
+                //             return {
+                //                 ...user,
+                //                 cursorPosition: data.cursorPosition
+                //             }
+                //         }
+                //         return user;
+                //     });
+                //     setConnectedUsers(updatedUsers);
+                // }
 
                 if(data.type === "requestForAllData") {
                     socket.send(
@@ -174,6 +175,7 @@ export const CodeEditor = () => {
 
     }
 
+
     const handleCodeChange = (value: any) => {
         setCode(value);
         socket?.send(
@@ -222,16 +224,16 @@ export const CodeEditor = () => {
 
     const handleEditorDidMount = (editor: any) => {
         if(editor){
-            editor.onDidChangeCursorPosition((e: any) => {
-                const cursorPosition = editor.getPosition();
-                socket?.send(
-                    JSON.stringify({
-                        type: "cursorPosition",
-                        cursorPosition: cursorPosition,
-                        user: user.id
-                    })
-                )
-            })
+            // editor.onDidChangeCursorPosition((e: any) => {
+            //     const cursorPosition = editor.getPosition();
+            //     socket?.send(
+            //         JSON.stringify({
+            //             type: "cursorPosition",
+            //             cursorPosition: cursorPosition,
+            //             user: user.id
+            //         })
+            //     )
+            // })
 
             editor.onDidChangeModelContent((e: any) => {
                 setCode(editor.getValue());
