@@ -23,7 +23,7 @@ app.get('/', (req, res) => {
 app.post('/submit', async (req, res) => {
     const { code, language, roomId,input } = req.body;
 
-    const submissionId = `submission-${Date.now()}-${roomId}}`
+    const submissionId = `submission-${Date.now()}-${roomId}`
     console.log(`Received submission from user ${roomId}`);
 
     try {
