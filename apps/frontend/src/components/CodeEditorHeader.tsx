@@ -29,7 +29,7 @@ export const CodeEditorHeader = ({
           <Code2 className="w-6 h-6 text-white" />
         </div>
         <div className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-          Code Together
+          CodeSync
         </div>
       </div>
 
